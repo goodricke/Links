@@ -5,7 +5,7 @@ pub mod auth;
 pub mod config;
 pub mod errors;
 pub mod handlers;
-pub mod model;
+pub mod models;
 pub mod routes;
 
 #[derive(Clone, FromRef)]

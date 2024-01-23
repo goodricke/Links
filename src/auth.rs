@@ -4,7 +4,7 @@ use cookie::Key;
 
 use crate::{errors::LinksError, AppState};
 
-use super::model::User;
+use crate::models::user::User;
 
 pub struct AuthenticatedUser(pub User);
 

@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::{Postgres, Transaction};
 
 use crate::errors::{LinksError, Result};
-use crate::handlers::CreateUser;
+use crate::handlers::user::CreateUser;
 
 const USER_COOKIE: &str = "links_user";
 const LOGIN_DURATION: i64 = 60; //measured in minutes
@@ -111,6 +111,15 @@ impl User {
             sqlx::query!("UPDATE users SET password = $1 WHERE id = $2", new, self.id,)
                 .execute(&mut **txn)
                 .await?;
+            Ok(())
+        }
+    }
+    pub async fn delete_user(txn: &mut Transaction<'_, Postgres>, id:i32) -> Result<()>{
+        let rows_affected = sqlx::query!("DELETE FROM users WHERE id = $1", id).execute(&mut **txn).await?.rows_affected();
+        if rows_affected != 1 {
+            //consider creating a 404 type
+            Err(sqlx::Error::RowNotFound.into())
+        }else {
             Ok(())
         }
     }
