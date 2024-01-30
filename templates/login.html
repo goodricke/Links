@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+	<h1>login</h1>
+	<main>
+    {% match error %}
+      {% when Some with (val) %}
+        <div>{{val}}</div>
+      {% when None %}
+    {% endmatch %}
+    <form method="POST">
+      <input type="text" id="username" name="username"> <br>
+      <input type="password" id="password" name="password"><br>
+      <input type="submit" value="login">
+    </form>
+	</main>
+{% endblock %}

@@ -21,12 +21,18 @@ pub struct User {
 }
 
 impl User {
-    pub async fn new(txn: &mut Transaction<'_, Postgres>, user: CreateUser) -> Result<Self> {
+
+    fn hash_password(password: &str) -> Result<String> {
         let argon = Argon2::default();
         let salt = SaltString::generate(&mut OsRng);
-        let hash = argon
-            .hash_password(user.password.as_bytes(), &salt)?
-            .to_string();
+        Ok(argon
+            .hash_password(password.as_bytes(), &salt)?
+            .to_string())
+    }
+
+
+    pub async fn new(txn: &mut Transaction<'_, Postgres>, user: CreateUser) -> Result<Self> {
+        let hash = Self::hash_password(&user.password)?;
         let res = sqlx::query!(
             "INSERT INTO users (email, password) VALUES ($1, $2) RETURNING id",
             user.email,
@@ -108,7 +114,8 @@ impl User {
             //maybe this error should be different
             Err(LinksError::Unauthorized)
         } else {
-            sqlx::query!("UPDATE users SET password = $1 WHERE id = $2", new, self.id,)
+            let hash = Self::hash_password(new)?;
+            sqlx::query!("UPDATE users SET password = $1 WHERE id = $2", hash, self.id,)
                 .execute(&mut **txn)
                 .await?;
             Ok(())
