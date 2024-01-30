@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+	<h1> Goodricke Links</h1>
+	<main>
+		<ul>
+			{% for link in links %}
+			<li>
+				<a href="{{link.link}}">
+				<h3> {{link.title}} </h3>	
+				{% match link.description %}
+					{% when Some with (val) %}
+						{{val}}
+					{% when None %}
+				{% endmatch %}
+				</a>
+			</li>
+			{% endfor %}
+		</ul>
+	</main>
+{% endblock %}

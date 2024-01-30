@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+	<h1> Goodricke Links</h1>
+  <header><a href="/admin/logout">LogOut</a><a href="/admin/password">Change Password</a></header>
+	<main>
+		<ul>
+			{% for link in links %}
+      <li>
+        <form method="POST" action="/admin/{{link.id}}" >
+          <label for="title">title</label><input type="text" id="title" name="title" value="{{link.title}}"><br> 	
+          <label for="description">description</title>
+          {% match link.description %}
+            {% when Some with (val) %}
+              <input type="text" id="description" name="description" value="{{val}}">
+            {% when None %}
+            <input type="text" id="description" name="description">
+          {% endmatch %}
+          <br>
+            <label for="link">link</link><input type="url" id="link" name="link" value="{{link.link}}"><br>
+              <input type="submit" value="save">
+        </form>
+        <form method="POST" action="/admin/{{link.id}}/delete"><input type="submit" value="delete"></form>
+      </li>
+			{% endfor %}
+      <h3> new </h3>
+      <form method="POST" action="/admin/create">
+         
+        <label for="title">title</label><input type="text" id="title" name="title"><br> 	
+        <label for="description">description</title><input type="text" id="description" name="description"><br>
+        <label for="link">link</link><input type="url" id="link" name="link" ><br>
+        <input type="submit" value="save">
+      </form>
+		</ul>
+	</main>
+{% endblock %}

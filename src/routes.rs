@@ -1,18 +1,21 @@
 use axum::{
-    routing::{get, post, put},
+    routing::{get, post},
     Router,
 };
 
 use crate::{
-    handlers::user::{add_user, get_user, login, logout, change_password, delete_user},
+    handlers::{user::{change_password, get_login_form, get_password_form, login, logout}, link::{admin, create_link, delete_link, index, update_link}},
     AppState,
 };
 
 pub fn routes() -> Router<AppState> {
     Router::new()
-        .route("/users", post(add_user))
-        .route("/users/:id", get(get_user).delete(delete_user))
-        .route("/users/login", post(login))
-        .route("/users/logout", post(logout))
-        .route("/users/password",put(change_password))
+        .route("/", get(index))
+        .route("/admin", get(admin))
+        .route("/admin/login", get(get_login_form).post(login))
+        .route("/admin/logout", get(logout))
+        .route("/admin/password",get(get_password_form).post(change_password))
+        .route("/admin/:id", post(update_link))
+        .route("/admin/:id/delete", post(delete_link))
+        .route("/admin/create", post(create_link))
 }
