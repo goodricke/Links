@@ -1,7 +1,13 @@
 {% extends "base.html" %}
 {% block content %}
-	<h1> Goodricke Links</h1>
-  <header><a href="/admin/logout">LogOut</a><a href="/admin/password">Change Password</a></header>
+	<h1>Admin Dashboard</h1>
+  <header>
+    <a href="/admin/logout">LogOut</a>
+    <a href="/admin/password">Change Password</a>
+    {% if superuser %}
+      <a href="/admin/management">user management</a>
+    {% endif %}
+  </header>
 	<main>
 		<ul>
 			{% for link in links %}

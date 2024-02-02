@@ -17,25 +17,22 @@ const LOGIN_DURATION: i64 = 60; //measured in minutes
 #[derive(Clone, Deserialize, Serialize)]
 pub struct User {
     pub id: i32,
-    pub email: String,
+    pub username: String,
+    pub superuser: bool,
 }
 
 impl User {
-
     fn hash_password(password: &str) -> Result<String> {
         let argon = Argon2::default();
         let salt = SaltString::generate(&mut OsRng);
-        Ok(argon
-            .hash_password(password.as_bytes(), &salt)?
-            .to_string())
+        Ok(argon.hash_password(password.as_bytes(), &salt)?.to_string())
     }
-
 
     pub async fn new(txn: &mut Transaction<'_, Postgres>, user: CreateUser) -> Result<Self> {
         let hash = Self::hash_password(&user.password)?;
         let res = sqlx::query!(
-            "INSERT INTO users (email, password) VALUES ($1, $2) RETURNING id",
-            user.email,
+            "INSERT INTO users (username, password) VALUES ($1, $2) RETURNING id",
+            user.username,
             hash
         )
         .fetch_one(&mut **txn)
@@ -43,25 +40,30 @@ impl User {
 
         Ok(Self {
             id: res.id,
-            email: user.email,
+            username: user.username,
+            superuser: false,
         })
     }
 
     pub async fn get(txn: &mut Transaction<'_, Postgres>, id: i32) -> Result<Self> {
-        let user = sqlx::query_as!(Self, "SELECT id, email FROM users WHERE id = $1", id)
-            .fetch_one(&mut **txn)
-            .await?;
+        let user = sqlx::query_as!(
+            Self,
+            "SELECT id, username, superuser FROM users WHERE id = $1",
+            id
+        )
+        .fetch_one(&mut **txn)
+        .await?;
         Ok(user)
     }
 
-    pub async fn get_by_email(
+    pub async fn get_by_username(
         txn: &mut Transaction<'_, Postgres>,
-        email: &str,
+        username: &str,
         password: &str,
     ) -> Result<Self> {
         let user = sqlx::query!(
-            "SELECT id, email, password FROM users WHERE email = $1",
-            email
+            "SELECT id, username, password, superuser FROM users WHERE username = $1",
+            username
         )
         .fetch_one(&mut **txn)
         .await?;
@@ -74,7 +76,8 @@ impl User {
         } else {
             Ok(Self {
                 id: user.id,
-                email: user.email,
+                username: user.username,
+                superuser: user.superuser,
             })
         }
     }
@@ -110,24 +113,28 @@ impl User {
         old: &str,
         new: &str,
     ) -> Result<()> {
-        if Self::get_by_email(txn, &self.email, old).await.is_err() {
+        if Self::get_by_username(txn, &self.username, old)
+            .await
+            .is_err()
+        {
             //maybe this error should be different
             Err(LinksError::Unauthorized)
         } else {
             let hash = Self::hash_password(new)?;
-            sqlx::query!("UPDATE users SET password = $1 WHERE id = $2", hash, self.id,)
-                .execute(&mut **txn)
-                .await?;
+            sqlx::query!(
+                "UPDATE users SET password = $1 WHERE id = $2",
+                hash,
+                self.id,
+            )
+            .execute(&mut **txn)
+            .await?;
             Ok(())
         }
     }
-    pub async fn delete_user(txn: &mut Transaction<'_, Postgres>, id:i32) -> Result<()>{
-        let rows_affected = sqlx::query!("DELETE FROM users WHERE id = $1", id).execute(&mut **txn).await?.rows_affected();
-        if rows_affected != 1 {
-            //consider creating a 404 type
-            Err(sqlx::Error::RowNotFound.into())
-        }else {
-            Ok(())
-        }
+    pub async fn delete_all_users(txn: &mut Transaction<'_, Postgres>) -> Result<()> {
+        sqlx::query!("DELETE FROM users WHERE permanent=false")
+            .execute(&mut **txn)
+            .await?;
+        Ok(())
     }
 }
