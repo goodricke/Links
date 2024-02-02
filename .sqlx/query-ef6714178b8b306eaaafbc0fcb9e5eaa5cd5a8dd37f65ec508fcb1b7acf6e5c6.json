@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id, email, password FROM users WHERE email = $1",
+  "query": "INSERT INTO links (title, description, link, ordr) VALUES ($1, $2, $3, (SELECT max(ordr) + 1 FROM links)) RETURNING id, ordr",
   "describe": {
     "columns": [
       {
@@ -10,25 +10,21 @@
       },
       {
         "ordinal": 1,
-        "name": "email",
-        "type_info": "Text"
-      },
-      {
-        "ordinal": 2,
-        "name": "password",
-        "type_info": "Text"
+        "name": "ordr",
+        "type_info": "Int4"
       }
     ],
     "parameters": {
       "Left": [
+        "Text",
+        "Text",
         "Text"
       ]
     },
     "nullable": [
       false,
-      false,
       false
     ]
   },
-  "hash": "c31cb1e7448383b6879dc53a287ec22d09400b1c17d0ea14368c4f30c8ca0291"
+  "hash": "ef6714178b8b306eaaafbc0fcb9e5eaa5cd5a8dd37f65ec508fcb1b7acf6e5c6"
 }

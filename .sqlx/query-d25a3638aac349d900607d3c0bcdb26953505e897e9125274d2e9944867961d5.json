@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE links SET title = $1, description = $2, link = $3 WHERE id = $4",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "d25a3638aac349d900607d3c0bcdb26953505e897e9125274d2e9944867961d5"
+}
