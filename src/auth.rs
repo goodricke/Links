@@ -19,7 +19,7 @@ impl IntoResponse for RedirectOrError {
     fn into_response(self) -> askama_axum::Response {
         match self {
             RedirectOrError::Error(e) => e.into_response(),
-            RedirectOrError::Redirect(r) => r.into_response()
+            RedirectOrError::Redirect(r) => r.into_response(),
         }
     }
 }
@@ -32,7 +32,11 @@ impl FromRequestParts<AppState> for AuthenticatedUser {
         parts: &mut Parts,
         state: &AppState,
     ) -> Result<Self, Self::Rejection> {
-        let mut txn = state.pool.begin().await.map_err(|e| RedirectOrError::Error(e.into()))?;
+        let mut txn = state
+            .pool
+            .begin()
+            .await
+            .map_err(|e| RedirectOrError::Error(e.into()))?;
         let jar = PrivateCookieJar::<Key>::from_request_parts(parts, state)
             .await
             .expect("private cookie jar cannot fail");
@@ -40,7 +44,8 @@ impl FromRequestParts<AppState> for AuthenticatedUser {
 
         match user {
             Ok(user) => Ok(AuthenticatedUser(user)),
-            Err(LinksError::DatabaseError(sqlx::Error::RowNotFound)) | Err(LinksError::Unauthorized) => {
+            Err(LinksError::DatabaseError(sqlx::Error::RowNotFound))
+            | Err(LinksError::Unauthorized) => {
                 Err(RedirectOrError::Redirect(Redirect::to("/admin/login")))
             }
             Err(e) => Err(RedirectOrError::Error(e)),

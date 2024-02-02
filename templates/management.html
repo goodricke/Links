@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>User Management</h1>
+<main>
+  <form method="POST" href="/admin/delete_all_users">
+    <label for="password">password</label><input type="password" id="password" name="password"><br>
+    <input type="submit" value="DELETE OLD COMMITTEE!">
+  </form>
+</main>
+{% endblock %}

@@ -1,7 +1,9 @@
-use sqlx::{Transaction, Postgres};
+use sqlx::{Postgres, Transaction};
 
-use crate::{handlers::link::{CreateLink, UpdateLink}, errors::Result};
-
+use crate::{
+    errors::Result,
+    handlers::link::{CreateLink, UpdateLink},
+};
 
 pub struct Link {
     pub id: i32,
@@ -32,34 +34,51 @@ impl Link {
     }
 
     pub async fn get_all(txn: &mut Transaction<'_, Postgres>) -> Result<Vec<Self>> {
-        let res = sqlx::query_as!(Self, "SELECT id, title, description, link, ordr FROM links ORDER BY ordr ASC")
+        let res = sqlx::query_as!(
+            Self,
+            "SELECT id, title, description, link, ordr FROM links ORDER BY ordr ASC"
+        )
         .fetch_all(&mut **txn)
-            .await?;
+        .await?;
         Ok(res)
     }
 
     //TODO audit log
-    pub async fn update(txn: &mut Transaction<'_, Postgres>, id: i32, link:UpdateLink) -> Result<()> {
-        let res = sqlx::query!("UPDATE links SET title = $1, description = $2, link = $3 WHERE id = $4",
-        link.title,
-        link.description,
-        link.link,
-        id).execute(&mut **txn).await?;
+    pub async fn update(
+        txn: &mut Transaction<'_, Postgres>,
+        id: i32,
+        link: UpdateLink,
+    ) -> Result<()> {
+        let res = sqlx::query!(
+            "UPDATE links SET title = $1, description = $2, link = $3 WHERE id = $4",
+            link.title,
+            link.description,
+            link.link,
+            id
+        )
+        .execute(&mut **txn)
+        .await?;
         match res.rows_affected() {
             1 => Ok(()),
-            0 => Err(crate::errors::LinksError::InternalServerError("link doesnt exist".into())),
-            _ => panic!("more than 1 row exists with id {{id}}")
+            0 => Err(crate::errors::LinksError::InternalServerError(
+                "link doesnt exist".into(),
+            )),
+            _ => panic!("more than 1 row exists with id {{id}}"),
         }
     }
 
     //TODO audit log
     //TODO this should change ordering
     pub async fn delete(txn: &mut Transaction<'_, Postgres>, id: i32) -> Result<()> {
-        let res = sqlx::query!("DELETE FROM links WHERE id = $1",id).execute(&mut **txn).await?;
+        let res = sqlx::query!("DELETE FROM links WHERE id = $1", id)
+            .execute(&mut **txn)
+            .await?;
         match res.rows_affected() {
             1 => Ok(()),
-            0 => Err(crate::errors::LinksError::InternalServerError("link doesnt exist".into())),
-            _ => panic!("more than 1 row exists with id {{id}}")
+            0 => Err(crate::errors::LinksError::InternalServerError(
+                "link doesnt exist".into(),
+            )),
+            _ => panic!("more than 1 row exists with id {{id}}"),
         }
     }
 }
